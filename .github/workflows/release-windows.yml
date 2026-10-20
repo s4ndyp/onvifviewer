@@ -15,9 +15,10 @@ permissions:
 jobs:
   build-windows:
     name: Windows installer
-    runs-on: windows-latest
+    # windows-latest (2025+) may not ship the MSVC C++ workload Craft needs.
+    runs-on: windows-2022
     env:
-      CRAFT: C:/CraftRoot/craft/bin/craft.py
+      CRAFT: C:/CraftMaster/windows-cl-msvc2022-x86_64/craft/bin/craft.py
 
     steps:
       - name: Check out source code
