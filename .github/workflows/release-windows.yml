@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Clone CraftMaster
         run: git clone --depth=1 https://invent.kde.org/packaging/craftmaster.git C:/CraftMaster/CraftMaster
@@ -56,7 +56,7 @@ jobs:
           }
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.4.0
         with:
           files: |
             packages/onvifviewer-*-windows-x86_64.exe
