@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Casper Meijn <casper@meijn.net>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+name: Release Windows installer
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Windows installer
+    runs-on: windows-latest
+    env:
+      CRAFT: C:/CraftRoot/craft/bin/craft.py
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Clone CraftMaster
+        run: git clone --depth=1 https://invent.kde.org/packaging/craftmaster.git C:/CraftMaster/CraftMaster
+
+      - name: Configure Craft
+        run: python C:/CraftMaster/CraftMaster/CraftMaster.py --config ${{ github.workspace }}/.craftsettings.ini --variables "WORKSPACE=${{ github.workspace }}"
+
+      - name: Add ONVIFViewer blueprints
+        run: python ${{ env.CRAFT }} --add-blueprint-repository https://github.com/s4ndyp/onvifviewer.git|${{ github.ref_name }}
+
+      - name: Install NSIS
+        run: python ${{ env.CRAFT }} dev-utils/nsis
+
+      - name: Install dependencies
+        run: python ${{ env.CRAFT }} --install-deps qt-apps/onvifviewer
+
+      - name: Build
+        run: python ${{ env.CRAFT }} --no-cache --options onvifviewer.srcDir=${{ github.workspace }} qt-apps/onvifviewer
+
+      - name: Package installer
+        run: python ${{ env.CRAFT }} --no-cache --options onvifviewer.srcDir=${{ github.workspace }} --package qt-apps/onvifviewer
+
+      - name: Rename artifacts
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          Get-ChildItem -Path packages -Filter "onvifviewer-*.exe" | ForEach-Object {
+            Move-Item -Path $_.FullName -Destination "packages/onvifviewer-${tag}-windows-x86_64.exe"
+          }
+          Get-ChildItem -Path packages -Filter "onvifviewer-*.7z" | ForEach-Object {
+            Move-Item -Path $_.FullName -Destination "packages/onvifviewer-${tag}-windows-x86_64.7z"
+          }
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            packages/onvifviewer-*-windows-x86_64.exe
+            packages/onvifviewer-*-windows-x86_64.7z
+          generate_release_notes: true
