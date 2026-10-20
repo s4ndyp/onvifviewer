@@ -1,0 +1,2 @@
+# Strip unneeded executables from the installer
+bin/(?!(onvifviewer|update-mime-database|kbuildsycoca5)).*\.exe
